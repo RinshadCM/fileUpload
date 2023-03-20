@@ -29,10 +29,11 @@ function Registration() {
         const errorData = await response.json();
         throw new Error(errorData.message);
       }
-      
+
+      // If the response is successful, you can clear the form fields and set the error message to an empty string.
       setUsername('');
       setPassword('');
-      setError('');
+      setError('Registration successful!');
     } catch (err) {
       setError(err.message);
     }
@@ -44,7 +45,7 @@ function Registration() {
       <MDBCard className='m-5' style={{ maxWidth: '600px' }}>
         <MDBCardBody className='px-5'>
           <h2 className="text-uppercase text-center mb-5">Create an account</h2>
-          {/* {error && <MDBAlert color='danger'>{error}</MDBAlert>} */}
+          {error && <p className="text-info">{error}</p>}
           <form onSubmit={handleSubmit}>
             <MDBInput
               wrapperClass='mb-4'

@@ -1,47 +1,107 @@
 const express = require('express');
-const cors=require('cors')
+const cors = require('cors')
 const multer = require('multer');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
 const path = require('path');
-const db= require("./db")
+const db = require("./db")
+const jwt = require('jsonwebtoken');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
 
-const bodyParser = require('body-parser')
+require('dotenv').config();
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
-app.use(bodyParser.json())
-
-
-app.use(cors({origin:'http://localhost:3000'}))
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: 'http://localhost:3000' }))
 
 const users = []; // a placeholder for user data
+
+passport.use(new LocalStrategy(async (username, password, done) => {
+    try {
+        const user = await db.User.findOne({ username });
+        if (!user) {
+            return done(null, false, { message: 'Invalid credentials' });
+        }
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (isMatch) {
+            return done(null, user);
+        } else {
+            return done(null, false, { message: 'Invalid credentials' });
+        }
+    } catch (err) {
+        return done(err);
+    }
+}));
+
+function generateToken(user) {
+    const payload = {
+        sub: user._id,
+        iat: Date.now(),
+    };
+    const token = jwt.sign(payload, process.env.JWT_SECRET);
+    return token;
+}
+
+
+app.use(passport.initialize());
+
+// app.post('/login', passport.authenticate('local', { session: false }), (req, res) => {
+//     const token = generateToken(req.user);
+//     res.json({ token });
+// });
+
 
 // Route for user registration
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
+  
+    // Check if user already exists
+    const existingUser = await db.User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+  
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
+  
     // Save the user data to MongoDB
     const user = new db.User({ username, password: hashedPassword });
     await user.save();
+  
     res.sendStatus(200);
-});
+  });
+  
+  
 
-
-// Route for user login
-app.post('/login', (req, res) => {
+// Login
+app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    // Find the user data in the array by username
-    const user = users.find(user => user.username === username);
-    if (user && bcrypt.compareSync(password, user.password)) {
-        res.sendStatus(200);
-    } else {
-        res.sendStatus(401);
+    try {
+        // Find the user data in the MongoDB database by username
+        const user = await db.User.findOne({ username });
+        if (!user) {
+            return res.sendStatus(401);
+        }
+        // Check if the password is correct
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.sendStatus(401);
+        }
+        // Generate a token for the user
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+        res.json({ token });
+    } catch (err) {
+        console.error(err);
+        res.sendStatus(500);
+        process.exit(1);
     }
-    console.log("Successsssssssssssssssssss");
 });
+
+
 
 // Route for file upload
 app.post('/upload', upload.single('file'), (req, res) => {

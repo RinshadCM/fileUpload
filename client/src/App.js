@@ -26,8 +26,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Registration></Registration>} />
-        <Route path="/login" element={<Login></Login>} />
+        <Route path="/" element={<Login></Login>} />
+        <Route path="/register" element={<Registration></Registration>} />
         <Route path="/upload" element={<UploadFile></UploadFile>} />
         <Route path="/view" element={<ViewFiles></ViewFiles>} />
         {/* <Route exact path="/delete" component={DeleteFile} />
