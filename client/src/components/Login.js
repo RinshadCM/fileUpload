@@ -34,7 +34,9 @@ function Login() {
 
       // If the response is successful, you can get the token from the response and save it to local storage.
       const data = await response.json();
+      console.log(data);
       localStorage.setItem('token', data.token);
+      localStorage.setItem('userId', data.userId);
 
       // Set login status to "success"
       setLoginStatus('success');

@@ -39,7 +39,7 @@ function UploadFile() {
   
       if (!response.ok) {
         if (response.status === 403) {
-          setError('User not authenticated Broooooooooooo');
+          setError('User not authenticated');
         } else {
           throw new Error('Upload failed');
         }

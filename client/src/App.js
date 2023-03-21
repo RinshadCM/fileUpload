@@ -16,7 +16,7 @@ function App() {
         <Route path="/" element={<Login></Login>} />
         <Route path="/register" element={<Registration></Registration>} />
         <Route path="/upload" element={<UploadFile></UploadFile>} />
-        <Route path="/view" element={<ViewFiles></ViewFiles>} />
+        <Route path="/files/:userId" element={<ViewFiles></ViewFiles>} />
         {/* <Route exact path="/delete" component={DeleteFile} />
         <Route exact path="/download" component={DownloadFile} /> */}
       </Routes>

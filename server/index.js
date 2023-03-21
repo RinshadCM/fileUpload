@@ -84,6 +84,7 @@ app.post('/login', async (req, res) => {
     try {
         // Find the user data in the MongoDB database by username
         const user = await db.User.findOne({ username });
+        console.log(user);
         if (!user) {
             return res.sendStatus(401);
         }
@@ -94,7 +95,8 @@ app.post('/login', async (req, res) => {
         }
         // Generate a token for the user
         const token = generateToken(user);
-        res.json({ token });
+        const userId=user._id
+        res.json({ token, userId });
     } catch (err) {
         console.error(err);
         res.sendStatus(500);
@@ -106,11 +108,11 @@ app.post('/login', async (req, res) => {
 
 // Middleware function to verify token
 function verifyToken(req, res, next) {
-    const token = req.headers.authorization;  
+    const token = req.headers.authorization;
     if (!token) {
         return res.status(401).json({ message: 'No token provided' });
     }
-  
+
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
             return res.status(403).json({ message: 'Failed to authenticate token' });
@@ -125,7 +127,7 @@ function verifyToken(req, res, next) {
 
 /// Route for file upload
 
-app.post('/upload',verifyToken, upload.single('file'), async (req, res) => {
+app.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
     const { filename, mimetype, buffer } = req.file;
     const code = Math.floor(100000 + Math.random() * 900000); // generate a 6-digit code
 
@@ -150,22 +152,23 @@ app.post('/upload',verifyToken, upload.single('file'), async (req, res) => {
 
 
 
-
-
-
 app.get('/files/:userId', async (req, res) => {
-    const userId = req.params.userId;
-    try {
-        const user = await db.User.findById(userId);
-        if (!user) {
-            return res.status(404).send('User not found');
-        }
-        res.json(user.files);
-    } catch (err) {
-        console.error(`Error fetching user: ${err}`);
-        res.status(500).send('Error fetching user');
+    const { userId } = req.params;
+    const user = await db.User.findById(userId).populate('files');
+    console.log(user);
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
     }
+    const files = user.files.map(file => {
+        return {
+            filename: file._id,
+            code: file.code,
+            contentType: file.contentType,
+        };
+    });
+    res.json(files);
 });
+
 
 
 

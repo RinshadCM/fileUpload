@@ -3,17 +3,18 @@ import { MDBBadge, MDBBtn, MDBTable, MDBTableHead, MDBTableBody } from 'mdb-reac
 
 export default function ViewFiles() {
   const [files, setFiles] = useState([]);
-
   useEffect(() => {
     const userId = localStorage.getItem('userId');
-    if (userId) {
-      fetch(`/files/${userId}`)
-        .then(res => res.json())
-        .then(data => setFiles(data))
-        .catch(err => console.error(`Error fetching files: ${err}`));
+    if (!userId) {
+      alert('You need to log in to view your files.');
+      return;
     }
+    fetch(`http://localhost:3001/files/${userId}`)
+      .then(res => res.json())
+      .then(data => setFiles(data))
+      .catch(err => console.error(`Error fetching files: ${err}`));
   }, []);
-
+  
 
   const handleDelete = (code) => {
     fetch(`/file/${code}`, { method: 'DELETE' })
@@ -54,6 +55,7 @@ export default function ViewFiles() {
             </td>
           </tr>
         ))}
+
       </MDBTableBody>
     </MDBTable>
   );

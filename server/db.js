@@ -43,17 +43,18 @@ async function saveFile(userId, code, file) {
     }
   });
   await savedFile.save();
-
+  
   const user = await User.findById(userId);
   if (!user) {
     throw new Error('User not found');
   }
-
+  
   user.files.push({
     fileId: savedFile._id,
     code: code
   });
   await user.save();
+  
 
   return savedFile;
 }
