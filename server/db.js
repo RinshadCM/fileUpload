@@ -36,15 +36,29 @@ async function saveFile(userId, code, file) {
   const savedFile = new File({
     userId: userId,
     code: code,
-    file: file
+    file: {
+      name: file.originalname,
+      data: file.buffer,
+      contentType: file.mimetype
+    }
   });
-  if (userId) {
-    await savedFile.save();
-  } else {
-    throw new Error('User not authenticated');
+  await savedFile.save();
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error('User not found');
   }
+
+  user.files.push({
+    fileId: savedFile._id,
+    code: code
+  });
+  await user.save();
+
   return savedFile;
 }
+
+
 
 
 module.exports = { User, File, saveFile };

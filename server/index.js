@@ -103,22 +103,6 @@ app.post('/login', async (req, res) => {
 });
 
 
-// // Middleware to authenticate the user
-// const authenticateUser = (req, res, next) => {
-//     const authHeader = req.headers.authorization;
-//     if (authHeader) {
-//         const token = authHeader.split(' ')[1];
-//         jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-//             if (err) {
-//                 return res.sendStatus(403);
-//             }
-//             req.user = user;
-//             next();
-//         });
-//     } else {
-//         res.sendStatus(401);
-//     }
-// };
 
 // Middleware function to verify token
 function verifyToken(req, res, next) {
