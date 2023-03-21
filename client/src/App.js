@@ -10,19 +10,6 @@ import ViewFiles from './components/ViewFiles';
 
 function App() {
 
-  // const [data,setData]=useState("");
-
-  // const getData=async()=>{
-  //   const response=await Axios.get('http://localhost:3000')
-  //   setData(response.data)
-  // }
-
-  // useEffect(()=>{
-  //   getData()
-  // },[])
-
-
-
   return (
     <Router>
       <Routes>

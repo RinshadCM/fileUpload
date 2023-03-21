@@ -13,6 +13,7 @@ import {
 function UploadFile() {
   const [file, setFile] = useState(null);
   const [code, setCode] = useState('');
+  const [error, setError] = useState('');
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -20,26 +21,38 @@ function UploadFile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const formData = new FormData();
     formData.append('file', file);
-
+    formData.append('code', code); // add code value to form data
+  
+    const token = localStorage.getItem('token');
+  
     try {
       const response = await fetch('http://localhost:3001/upload', {
         method: 'POST',
+        headers: {
+          'Authorization': `${token}`,
+        },
         body: formData,
       });
-
+  
       if (!response.ok) {
-        throw new Error('Upload failed');
+        if (response.status === 403) {
+          setError('User not authenticated Broooooooooooo');
+        } else {
+          throw new Error('Upload failed');
+        }
       }
-
+  
       const data = await response.json();
       setCode(data.code);
     } catch (err) {
       console.error(err);
     }
   };
+  
+
 
   return (
     <MDBContainer fluid>
@@ -75,6 +88,14 @@ function UploadFile() {
                     value={code}
                     readOnly
                   />
+                </>
+              )}
+              {error && (
+                <>
+                  <hr className='mx-n3' />
+                  <div className='alert alert-danger' role='alert'>
+                    {error}
+                  </div>
                 </>
               )}
             </MDBCardBody>
