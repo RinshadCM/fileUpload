@@ -12,7 +12,8 @@ const userSchema = new Schema({
   files: [{
     name: String,
     data: Buffer,
-    contentType: String
+    contentType: String,
+    code:String
   }]
 });
 
@@ -25,39 +26,45 @@ const fileSchema = new Schema({
   file: {
     name: String,
     data: Buffer,
-    contentType: String
+    contentType: String,
+    code:String
   }
 });
 
 const User = model('User', userSchema);
 const File = model('File', fileSchema);
 
+
 async function saveFile(userId, code, file) {
+  const originalFileName = file;
   const savedFile = new File({
     userId: userId,
     code: code,
     file: {
-      name: file.originalname,
+      name: originalFileName,
       data: file.buffer,
       contentType: file.mimetype
     }
   });
   await savedFile.save();
-  
+
   const user = await User.findById(userId);
   if (!user) {
     throw new Error('User not found');
   }
-  
+
   user.files.push({
-    fileId: savedFile._id,
-    code: code
+    fileId: originalFileName,
+    name: savedFile._id,
+    contentType: file.mimetype,
+    code: savedFile.code
   });
   await user.save();
-  
 
   return savedFile;
 }
+
+
 
 
 

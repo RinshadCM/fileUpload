@@ -17,14 +17,19 @@ export default function ViewFiles() {
   
 
   const handleDelete = (code) => {
-    fetch(`/file/${code}`, { method: 'DELETE' })
+    const userId = localStorage.getItem('userId');
+    fetch(`http://localhost:3001/files/${userId}/${code}`, { method: 'DELETE' })
       .then(res => {
         if (res.ok) {
           setFiles(files.filter(file => file.code !== code));
+        } else {
+          throw new Error('Failed to delete file');
         }
       })
       .catch(err => console.error(`Error deleting file: ${err}`));
   };
+
+  
 
   const handleDownload = (code) => {
     window.open(`/download/${code}`);
