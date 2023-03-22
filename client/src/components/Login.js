@@ -51,6 +51,10 @@ function Login() {
     }
   };
 
+  const Register= ()=>{
+    window.location.href = '/register';
+  }
+
   return (
     <MDBContainer fluid className='d-flex align-items-center justify-content-center bg-image' style={{backgroundImage: 'url(https://mdbcdn.b-cdn.net/img/Photos/new-templates/search-box/img4.webp)'}}>
       <div className='mask gradient-custom-3'></div>
@@ -63,6 +67,8 @@ function Login() {
             <MDBInput wrapperClass='mb-4' label='Your Email' size='lg' id='form2' type='email' value={username} onChange={(e) => setUsername(e.target.value)}/>
             <MDBInput wrapperClass='mb-4' label='Password' size='lg' id='form3' type='password' value={password} onChange={(e) => setPassword(e.target.value)}/>
             <MDBBtn className='mb-4 w-100 gradient-custom-4' size='lg' type='submit'>Login</MDBBtn>
+            <MDBBtn onClick={Register} className='mb-4 w-100 gradient-custom-5' size='lg' type=''>Register</MDBBtn>
+
           </form>
         </MDBCardBody>
       </MDBCard>

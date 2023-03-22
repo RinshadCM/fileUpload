@@ -13,7 +13,7 @@ const userSchema = new Schema({
     name: String,
     data: Buffer,
     contentType: String,
-    code:String
+    code: String
   }]
 });
 
@@ -27,7 +27,7 @@ const fileSchema = new Schema({
     name: String,
     data: Buffer,
     contentType: String,
-    code:String
+    code: String
   }
 });
 
@@ -63,10 +63,5 @@ async function saveFile(userId, code, file) {
 
   return savedFile;
 }
-
-
-
-
-
 
 module.exports = { User, File, saveFile };

@@ -34,10 +34,15 @@ function Registration() {
       setUsername('');
       setPassword('');
       setError('Registration successful!');
+      window.location.href = '/';
     } catch (err) {
       setError(err.message);
     }
   };
+
+  const Login= ()=>{
+    window.location.href = '/';
+  }
 
   return (
     <MDBContainer fluid className='d-flex align-items-center justify-content-center bg-image' style={{ backgroundImage: 'url(https://mdbcdn.b-cdn.net/img/Photos/new-templates/search-box/img4.webp)' }}>
@@ -66,6 +71,8 @@ function Registration() {
               onChange={(e) => setPassword(e.target.value)}
             />
             <MDBBtn className='mb-4 w-100 gradient-custom-4' size='lg' type='submit'>Register</MDBBtn>
+            <MDBBtn onClick={Login} className='mb-4 w-100 gradient-custom-5' size='lg' type=''>Login</MDBBtn>
+
           </form>
         </MDBCardBody>
       </MDBCard>

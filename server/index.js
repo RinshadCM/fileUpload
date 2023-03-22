@@ -46,15 +46,7 @@ function generateToken(user) {
     return token;
 }
 
-
-
 app.use(passport.initialize());
-
-// app.post('/login', passport.authenticate('local', { session: false }), (req, res) => {
-//     const token = generateToken(req.user);
-//     res.json({ token });
-// });
-
 
 // Route for user registration
 app.post('/register', async (req, res) => {
@@ -76,15 +68,12 @@ app.post('/register', async (req, res) => {
     res.sendStatus(200);
 });
 
-
-
 // Login
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     try {
         // Find the user data in the MongoDB database by username
         const user = await db.User.findOne({ username });
-        console.log(user);
         if (!user) {
             return res.sendStatus(401);
         }
@@ -104,8 +93,6 @@ app.post('/login', async (req, res) => {
     }
 });
 
-
-
 // Middleware function to verify token
 function verifyToken(req, res, next) {
     const token = req.headers.authorization;
@@ -122,59 +109,51 @@ function verifyToken(req, res, next) {
     });
 }
 
-
-
-
-
 // Set storage engine
 const storage = multer.diskStorage({
-  destination: './uploads',
-  filename: function(req, file, callback) {
-    // Generate a new filename by appending the current timestamp to the original filename
-    const newFilename = Date.now() + '-' + file.originalname;
-    callback(null, newFilename);
-  }
+    destination: './uploads',
+    filename: function (req, file, callback) {
+        // Generate a new filename by appending the current timestamp to the original filename
+        const newFilename = Date.now() + '-' + file.originalname;
+        callback(null, newFilename);
+    }
 });
 
 // Initialize upload variable
 const uploaded = multer({
-  storage: storage
+    storage: storage
 });
 
 // Route for file upload
 app.post('/upload', verifyToken, uploaded.single('file'), async (req, res) => {
-  const { originalname, mimetype, buffer } = req.file;
-  const code = Math.floor(100000 + Math.random() * 900000); // generate a 6-digit code
+    const { originalname, mimetype, buffer } = req.file;
+    const code = Math.floor(100000 + Math.random() * 900000); // generate a 6-digit code
 
-  try {
-    if (!req.user) { // check if user is authenticated
-      throw new Error('User not authenticated');
+    try {
+        if (!req.user) { // check if user is authenticated
+            throw new Error('User not authenticated');
+        }
+        const savedFile = await db.saveFile(req.user._id, code, originalname, {
+            name: originalname,
+            data: buffer,
+            contentType: mimetype
+        });
+
+        // Rename the uploaded file
+        const oldPath = path.join(__dirname, 'uploads', req.file.filename);
+        const newFilename = savedFile._id + '-' + req.file.originalname;
+        const newPath = path.join(__dirname, 'uploads', newFilename);
+        fs.renameSync(oldPath, newPath);
+
+        res.json({ code, fileId: savedFile._id });
+    } catch (err) {
+        console.error(`Error uploading file: ${err}`);
+        res.status(500).send('Error uploading file');
     }
-    const savedFile = await db.saveFile(req.user._id, code, originalname, {
-      name: originalname,
-      data: buffer,
-      contentType: mimetype
-    });
-
-    // Rename the uploaded file
-    const oldPath = path.join(__dirname, 'uploads', req.file.filename);
-    const newFilename = savedFile._id + '-' + req.file.originalname;
-    const newPath = path.join(__dirname, 'uploads', newFilename);
-    fs.renameSync(oldPath, newPath);
-
-    res.json({ code, fileId: savedFile._id });
-  } catch (err) {
-    console.error(`Error uploading file: ${err}`);
-    res.status(500).send('Error uploading file');
-  }
 });
 
 
-
-
-
-
-app.get('/files/:userId', async (req, res) => {
+app.get('/files/:userId', async (req, res,) => {
     const { userId } = req.params;
     const user = await db.User.findById(userId).populate('files');
     if (!user) {
@@ -191,33 +170,41 @@ app.get('/files/:userId', async (req, res) => {
 });
 
 
-
-
-
-
-// Route for file retrieval
-app.get('/download/:code', (req, res) => {
+app.get('/download/:code', async (req, res) => {
     const { code } = req.params;
-    // Check if the file exists
-    if (fs.existsSync(path.join(__dirname, 'uploads', `${code}.dat`))) {
-        // Stream the file to the response
-        res.sendFile(path.join(__dirname, 'uploads', `${code}.dat`));
-    } else {
-        res.sendStatus(404);
+    try {
+      // Find the file with the matching code in the database
+      const file = await db.File.findOne({ code });
+  
+      if (!file) {
+        // If no file with the requested code was found, return an error
+        return res.status(404).json({ message: 'File not found' });
+      }
+  
+      // If the file was found, return it to the user for download
+      res.set('Content-Type', file.contentType);
+      res.set('Content-Disposition', `attachment; filename="${file.name}"`);
+      console.log(file);
+      res.send(file.data);
+    } catch (err) {
+      console.error(`Error downloading file: ${err}`);
+      res.status(500).send('Error downloading file');
     }
-});
+  });
+  
+
+  
+  
 
 // Route for file deletion
 app.delete('/files/:userId/:code', async (req, res) => {
     const { userId } = req.params;
     const { code } = req.params;
-    console.log(userId, code);
     try {
         console.log(`Deleting file with code ${code}...`);
 
         // delete file from the database
         const deletedFile = await db.File.findOneAndDelete({ code });
-        console.log(deletedFile);
         if (!deletedFile) {
             console.log(`File with code ${code} not found`);
             return res.status(404).send({ message: 'File not found' });
@@ -237,27 +224,12 @@ app.delete('/files/:userId/:code', async (req, res) => {
                 }
             });
         });
-
-        // update user's files array in the database
-        const updatedUser = await db.User.findByIdAndUpdate(
-            deletedFile.userId,
-            { $pull: { files: { fileId: deletedFile._id } } },
-            { new: true }
-        );        
-        if (!updatedUser) {
-            console.log(`User with file ${deletedFile._id} not found`);
-            return res.status(404).send({ message: 'User not found' });
-        }
-        console.log(`User ${updatedUser.username} updated successfully`);
-
         res.send({ message: 'File deleted successfully' });
     } catch (err) {
         console.error(`Error deleting file: ${err}`);
         res.status(500).send({ message: 'Internal server error' });
     }
 });
-
-
 
 
 app.listen(3001, () => {

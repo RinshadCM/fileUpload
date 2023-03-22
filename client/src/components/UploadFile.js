@@ -21,13 +21,13 @@ function UploadFile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('code', code); // add code value to form data
-  
+
     const token = localStorage.getItem('token');
-  
+
     try {
       const response = await fetch('http://localhost:3001/upload', {
         method: 'POST',
@@ -36,7 +36,7 @@ function UploadFile() {
         },
         body: formData,
       });
-  
+
       if (!response.ok) {
         if (response.status === 403) {
           setError('User not authenticated');
@@ -44,14 +44,17 @@ function UploadFile() {
           throw new Error('Upload failed');
         }
       }
-  
+
       const data = await response.json();
       setCode(data.code);
     } catch (err) {
       console.error(err);
     }
   };
-  
+  const View= ()=>{
+    const id=localStorage.getItem('userId')
+    window.location.href = `/files/${id}`;
+  }
 
 
   return (
@@ -90,6 +93,10 @@ function UploadFile() {
                   />
                 </>
               )}
+
+              <MDBBtn onClick={View} className='my-4' size='lg' type=''>
+                View Previous Uploads
+              </MDBBtn>
               {error && (
                 <>
                   <hr className='mx-n3' />
